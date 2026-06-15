@@ -134,3 +134,7 @@ The cyclic formulation prevents boundary problems such as January vs. December a
 6. Conclusion
 
 This project demonstrates an image temporal prediction system. It combines metadata extraction, caption generation, Qwen hidden-state embeddings, PyTorch probe training, inference, and EDA into a single configurable pipeline. Although current prediction errors indicate that visual time estimation is challenging, the implemented workflow provides a strong foundation for further research into temporal reasoning from images.
+
+7. Why readme and requirements are important in opensource project.
+
+A clear README and a reproducible environment are very important for any successful open source project. Complex projects are nearly impossible to adopt without documentation that explains what they are and how to use them. If users cannot get the project running easily, they will simply move on. My professor has always stressed that fostering an active open community is essential, and providing a smooth onboarding experience through these tools is the first step toward achieving that.
