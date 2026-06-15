@@ -1,0 +1,136 @@
+Image Temporal Analysis
+
+1. Project Purpose
+
+This project introduces an automated temporal analysis pipeline designed to infer the capture time of an image based solely on visual evidence. Metadata is frequently stripped from digital files during transfers—particularly via social media platforms—or may be missing entirely in offline environments. Our model recovers this temporal context, providing an effective solution for timestamp estimation without relying on EXIF data or network connectivity. The system extracts image metadata, generates detailed visual descriptions, converts images into hidden-state embeddings using a vision-language model, and trains a lightweight temporal probe to estimate month, day, hour, and minute.
+
+The main goal is to test whether visual cues such as lighting, shadows, weather, season, clothing, background objects, and scene context can be used to infer image capture time.
+
+2. Code Explanation
+
+pipeline.py
+pipeline.py is the main entry point. It defines common paths, model settings, training parameters, and a stage dictionary that controls which stages run. It connects all modules in order:
+2-1. dataset generation
+2-2. embedding extraction
+2-3. model training
+2-4. inference
+2-5. training result EDA
+2-6. inference result EDA
+
+make_dataset.py
+
+This file scans an image directory, opens each image with Pillow, extracts EXIF datetime and GPS metadata, and generates a structured visual description using Gemini 2.5 Flash. The output is saved as dataset.csv with columns such as File Name, Description, DateTime, Full Path, Status, latitude, longitude, and Is_Temporal.
+Images without valid datetime metadata are marked with Status = 0, allowing later stages to filter them out during training and inference.
+
+make_dataset_embedding.py
+
+This module loads Qwen/Qwen3.5-9B with 4-bit quantization and extracts hidden states from selected layers, mainly layers 9, 19, and 24. Each image is resized to a maximum side length of 448 pixels, passed through the model, and saved as a .pt file containing tensors such as:
+hidden_states9
+hidden_states19
+hidden_states24
+
+These tensors become the model input for temporal prediction.
+
+train_code.py
+
+train_code.py trains a temporal prediction probe on saved hidden-state embeddings. The target time is transformed into two cyclic angular values:
+
+- theta: month/day position within the year
+- phi: hour/minute position within the day
+
+This cyclic representation is useful because time wraps around. For example, December and January are close in a calendar cycle, and 23:59 is close to 00:00.
+
+The model architecture is a sequence-level attention probe:
+
+- an attention layer assigns weights to hidden-state tokens
+- weighted embeddings are pooled into one vector
+- a feed-forward head predicts two angular values
+
+The loss function is a cyclic cosine loss, and validation error is converted back into a human-readable time difference. The best model for each layer is saved as best_layer_{layer}.pth.
+
+inference_code.py
+
+This module loads a trained temporal probe and applies it to new image embeddings. It predicts angular time values, converts them back to month/day/hour/minute, compares them with the actual datetime if available, and saves results to CSV.
+
+Main output fields include:
+
+- Actual_Time
+- Predicted_Time
+- Error_Format
+
+train_eda.py and inference_eda.py
+
+These files analyze prediction results. They compute average and median error, identify best and worst predictions, and generate plots for:
+
+- error distribution
+- actual date vs. predicted date
+- average error by month
+- average error by hour
+
+4. Workflow
+
+The complete workflow is:
+
+4-1. **Collect images**
+   - Place images in the configured image directory.
+
+4-2. **Generate dataset**
+   - Run make_dataset.py through pipeline.py.
+   - Extract EXIF datetime/GPS metadata.
+   - Generate Gemini descriptions.
+   - Save dataset.csv.
+
+4-3. **Extract embeddings**
+   - Load Qwen/Qwen3.5-9B.
+   - Extract hidden states from layers 9, 19, and 24.
+   - Save .pt files for each image.
+
+4-4. **Train temporal probes**
+   - Load valid images with Status != 0.
+   - Split data into 80% training and 20% validation.
+   - Train layer-specific attention probe models.
+   - Save best validation models.
+
+4-5. **Run inference**
+   - Load a trained model, usually best_layer_9.pth.
+   - Predict capture time for new image embeddings.
+   - Save predicted times and error values.
+
+4-6. **Analyze results**
+   - Run EDA scripts on training and inference outputs.
+   - Review average error, median error, best cases, worst cases, and time-based error patterns.
+
+
+5. Results
+
+The available experiment outputs show that the system successfully completed both validation and inference stages.
+
+Layer 9 Validation Result
+
+Using individual_layer_9.csv:
+COCO2017
+- Number of validation samples: 4,173
+- Mean prediction error: 75 days, 4:19:12
+- Median prediction error: 67 days, 4:07:00
+- Best prediction error: 0:57:00
+- Worst prediction error: 182 days, 6:34:00
+
+Layer 9 Inference Result
+
+Using inference_results_layer9_new.csv:
+My data
+- Number of inference samples: 1,609
+- Mean prediction error: 80 days, 0:40:00
+- Median prediction error: 72 days, 18:16:00
+- Best prediction error: 0:39:00
+- Worst prediction error: 182 days, 11:28:00
+
+Interpretation
+
+The results indicate that while the pipeline can successfully infer temporal information from visual embeddings, the prediction task remains challenging. Some images are predicted with an error of less than one hour, suggesting that the model is capable of capturing strong visual time cues. However, the average error remains significant, particularly for images that lack clear seasonal, lighting, or contextual indicators. A primary factor contributing to this performance limitation is the variability in global locations. Because weather patterns and environmental conditions are not uniform across the globe—for instance, some regions experience summer in June while others are in winter—the model struggles to maintain consistent temporal accuracy across diverse geographical settings.
+
+The cyclic formulation prevents boundary problems such as January vs. December and midnight vs. late night, while the attention-based probe provides a lightweight way to learn from large hidden-state sequences. Future improvements could include a larger curated dataset, stronger temporal labels, location-aware modeling, ensemble inference across layers 9/19/24, and uncertainty calibration.
+
+6. Conclusion
+
+This project demonstrates an image temporal prediction system. It combines metadata extraction, caption generation, Qwen hidden-state embeddings, PyTorch probe training, inference, and EDA into a single configurable pipeline. Although current prediction errors indicate that visual time estimation is challenging, the implemented workflow provides a strong foundation for further research into temporal reasoning from images.
