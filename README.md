@@ -126,7 +126,6 @@ PROJECT_ID      = "your-project-id"
 ## Directory Structure
 
 ```
-forgithub/
 ├── pipeline.py                      # ← Main pipeline (run this only!)
 ├── make_dataset.py                  # Dataset generation
 ├── make_dataset_embedding.py        # Image embedding extraction
@@ -134,6 +133,7 @@ forgithub/
 ├── inference_code.py                # Inference
 ├── train_eda.py                     # Training results visualization
 ├── inference_eda.py                 # Inference results visualization
+├── inference_one_image.py           # Inference result one picture
 ├── requirements.txt                 # Package dependencies
 ├── gcp-key.json                     # GCP service account key
 ├── dataset.csv                      # Generated (step 1)
@@ -253,7 +253,7 @@ If you use **the pretrained temporal probe model** (trained on ShareGPT4V datase
 
 The pretrained temporal probe model is available at:
 ```
-https://drive.google.com/file/d/1ujluIUUaw_n3hsLLzCBuVEJZ9ATCIKRc/view?usp=sharing
+https://drive.google.com/drive/folders/1AIQG1UshBPBvpA8kTtXlorQETbMHj0bk?usp=sharing
 ```
 
 Extract the `.pth` file and place in `saved_models/` folder:
