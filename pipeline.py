@@ -22,9 +22,9 @@ EMBED_MODEL_ID    = "Qwen/Qwen3.5-9B"
 EMBED_IMAGE_SIDE  = 448
 EMPTY_CACHE_EVERY = 50
 
-LAYERS  = [9, 19, 24]                       
-WEIGHTS = {9: 0.34, 19: 0.33, 24: 0.33}     
-YEAR    = 2026                              
+LAYERS  = [9]                               # 전 파이프라인 공통: layer 9 (best_layer_9.pth)
+WEIGHTS = {9: 1.0}                           # 단일 레이어이므로 가중치 1.0
+YEAR    = 2026
 
 EPOCHS     = 10
 BATCH_SIZE = 8

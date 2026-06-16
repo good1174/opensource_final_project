@@ -96,9 +96,9 @@ def run_integrated_analysis(pt_dir, csv_path, layers=None, weights=None,
     os.makedirs(model_save_dir, exist_ok=True)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     if layers is None:
-        layers = [9, 19, 24]
+        layers = [9]                          # best_layer_9.pth 로 통일
     if weights is None:
-        weights = {9: 0.34, 19: 0.33, 24: 0.33}
+        weights = {9: 1.0}
     ensemble_data = {}
 
     for layer_idx in layers:

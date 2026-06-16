@@ -5,7 +5,6 @@ import seaborn as sns
 from datetime import datetime, timedelta
 import os
 
-# Font configuration
 plt.rcParams['font.family'] = 'DejaVu Sans'
 plt.rcParams['axes.unicode_minus'] = False
 
@@ -14,13 +13,10 @@ def perform_detailed_eda(csv_path):
         print(f"File not found: {csv_path}")
         return
 
-    # 1. Load data
     df = pd.read_csv(csv_path)
     
-    # Convert Error string to seconds
     df['Error_Total_Seconds'] = pd.to_timedelta(df['Error_Format']).dt.total_seconds()
 
-    # Date parsing logic
     def parse_actual(x):
         try:
             return pd.to_datetime(x)
@@ -36,10 +32,9 @@ def perform_detailed_eda(csv_path):
     df['Actual_DT'] = df['Actual_Time'].apply(parse_actual)
     df['Pred_DT'] = df['Predicted_Time'].apply(parse_predicted)
     
-    # Remove missing values
     df = df.dropna(subset=['Actual_DT', 'Pred_DT'])
     
-    # Extract analysis attributes
+
     df['Actual_Month'] = df['Actual_DT'].dt.month
     df['Actual_Hour'] = df['Actual_DT'].dt.hour
     df['Error_Hours'] = df['Error_Total_Seconds'] / 3600
@@ -53,19 +48,16 @@ def perform_detailed_eda(csv_path):
 
     fig = plt.figure(figsize=(18, 12))
     
-    # (1) Error distribution
     plt.subplot(2, 2, 1)
     sns.histplot(df['Error_Days'], bins=30, kde=True, color='skyblue')
     plt.title('Error Distribution (Unit: Days')
 
-    # (2) Actual date vs predicted date scatter (with leap day handling)
     plt.subplot(2, 2, 2)
     
-    # Fix: Handle leap day (Feb 29) by converting to 2026
     def to_2026(dt):
         try:
             return dt.replace(year=2026)
-        except ValueError: # Feb 29 error handling
+        except ValueError:
             return dt.replace(year=2026, month=2, day=28)
 
     df['Actual_2026'] = df['Actual_DT'].apply(to_2026)
@@ -79,12 +71,10 @@ def perform_detailed_eda(csv_path):
     plt.ylabel('Predicted Date (Day of Year)')
     plt.colorbar(label='Error (Days)')
 
-    # (3) Average error by month
     plt.subplot(2, 2, 3)
     sns.barplot(data=df, x='Actual_Month', y='Error_Days', palette='coolwarm')
     plt.title('Average Prediction Error by Shooting Month')
 
-    # (4) Average error by hour
     plt.subplot(2, 2, 4)
     sns.lineplot(data=df, x='Actual_Hour', y='Error_Hours', marker='o', color='orange')
     plt.xticks(range(0, 24))
@@ -95,7 +85,6 @@ def perform_detailed_eda(csv_path):
     plt.savefig('layer_analysis_plots_fixed.png')
     plt.show()
 
-    # Error sample output
     print("\n=== Best Predictions (Top 5) ===")
     print(df.sort_values('Error_Total_Seconds').head(10)[['File Name', 'Actual_Time', 'Predicted_Time', 'Error_Format']])
     print("\n=== Worst Predictions (Top 5) ===")
