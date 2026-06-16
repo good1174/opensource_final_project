@@ -281,6 +281,7 @@ STEPS = {
 |-----------|---------|-------------|
 | **Qwen 3.5 9B** | [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0) | Vision-language model for image embedding extraction |
 | **ShareGPT4V Dataset** | [CC-BY-NC-4.0](https://creativecommons.org/licenses/by-nc/4.0/) | Image description generation reference dataset (only if using pretrained model) |
+| **COCO2017 Dataset** | [CC-BY-4.0](https://creativecommons.org/licenses/by/4.0) | COCO2017 dataset (only if using pretrained model) |
 
 
 ### Copyright Attribution
